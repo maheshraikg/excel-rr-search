@@ -207,11 +207,11 @@ export default function Home() {
                 </div>
               )}
 
-              {/* App Download Section */}
-              <AppDownload />
+              {/* App Download Section - Show after search */}
+              {hasSearched && <AppDownload />}
 
-              {/* Social Media Sharing Section */}
-              <SocialMediaSharing />
+              {/* Social Media Sharing Section - Show after search */}
+              {hasSearched && <SocialMediaSharing />}
             </>
           )}
         </div>
