@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import SocialShare from '@/components/SocialShare';
 import AppDownload from '@/components/AppDownload';
 import SocialMediaSharing from '@/components/SocialMediaSharing';
+import { AdBanner, AdRectangle } from '@/components/AdUnit';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { api, type SearchFilters, type SearchResult } from '@/lib/api';
@@ -204,11 +205,17 @@ export default function Home() {
                     searchResults={searchResults}
                     searchTerm={currentSearchTerm}
                   />
+                  
+                  {/* Strategic Ad Placement - After Results */}
+                  <AdBanner className="my-6" />
                 </div>
               )}
 
               {/* App Download Section - Show after search */}
               {hasSearched && <AppDownload />}
+
+              {/* Ad between sections */}
+              {hasSearched && <AdRectangle className="my-6" />}
 
               {/* Social Media Sharing Section - Show after search */}
               {hasSearched && <SocialMediaSharing />}
