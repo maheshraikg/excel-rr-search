@@ -37,7 +37,7 @@ export class MemStorage implements IStorage {
       ...insertFile,
       id,
       uploadDate: new Date(),
-      sheets: insertFile.sheets || [],
+      sheets: Array.isArray(insertFile.sheets) ? insertFile.sheets : [],
     };
     this.excelFiles.set(id, file);
     return file;
@@ -65,7 +65,11 @@ export class MemStorage implements IStorage {
   async saveExcelData(dataRows: InsertExcelData[]): Promise<void> {
     for (const row of dataRows) {
       const id = randomUUID();
-      const dataRow: ExcelDataRow = { ...row, id };
+      const dataRow: ExcelDataRow = { 
+        ...row, 
+        id,
+        headers: Array.isArray(row.headers) ? row.headers : []
+      };
       this.excelData.set(id, dataRow);
     }
   }
