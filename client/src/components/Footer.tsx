@@ -1,33 +1,33 @@
-import { Heart, MessageCircle } from 'lucide-react';
+import { Heart, MessageCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function Footer() {
   return (
-    <footer className="mt-16 border-t bg-muted/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <footer className="mt-8 sm:mt-16 border-t bg-muted/30">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Contact Section */}
-        <Card className="mb-8 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950 dark:to-red-950 border-orange-200 dark:border-orange-800">
-          <CardContent className="p-6">
-            <div className="text-center space-y-4">
-              <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200">
+        <Card className="mb-6 sm:mb-8 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950 dark:to-red-950 border-orange-200 dark:border-orange-800">
+          <CardContent className="p-4 sm:p-6">
+            <div className="text-center space-y-3 sm:space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold text-orange-800 dark:text-orange-200">
                 ಇದೆ ರೀತಿಯ Tool ನಿಮಗೆ ಬೇಕಿದಲ್ಲಿ ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ
               </h3>
-              <p className="text-sm text-orange-700 dark:text-orange-300">
+              <p className="text-xs sm:text-sm text-orange-700 dark:text-orange-300 px-2">
                 Need similar tools? Contact us for custom solutions
               </p>
-              <div className="flex justify-center gap-4">
+              <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
                 <Button
                   asChild
                   variant="default"
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
                   data-testid="button-whatsapp-contact"
                 >
                   <a 
                     href="https://wa.me/919481460546" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2"
+                    className="flex items-center justify-center gap-2"
                   >
                     <MessageCircle className="w-4 h-4" />
                     WhatsApp Us
@@ -36,16 +36,17 @@ export default function Footer() {
                 <Button
                   asChild
                   variant="outline"
-                  className="border-orange-300 text-orange-700 hover:bg-orange-100 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900 animated-button"
+                  className="border-orange-300 text-orange-700 hover:bg-orange-100 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900 animated-button w-full sm:w-auto"
                   data-testid="button-more-info"
                 >
                   <a 
                     href="https://www.Kspstadk.com" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2"
+                    className="flex items-center justify-center gap-2"
                   >
-                    ✨ ಹೆಚ್ಚಿನ ಮಾಹಿತಿಗಾಗಿ
+                    <Sparkles className="w-4 h-4" />
+                    ಹೆಚ್ಚಿನ ಮಾಹಿತಿಗಾಗಿ
                   </a>
                 </Button>
               </div>
@@ -54,22 +55,22 @@ export default function Footer() {
         </Card>
 
         {/* Copyright */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <div className="text-center space-y-3 sm:space-y-4">
+          <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
             <span>© 2025</span>
             <a 
               href="https://www.Kspstadk.com" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-primary hover:underline"
+              className="text-primary hover:underline break-all"
             >
               www.Kspstadk.com
             </a>
             <span>Made with</span>
-            <Heart className="w-4 h-4 text-red-500 fill-current" />
+            <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 fill-current" />
             <span>for All</span>
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground px-2">
             Excel Data Search Tool - Empowering Data Access for Everyone
           </div>
         </div>
