@@ -64,7 +64,7 @@ export default function AppDownload() {
       <CardContent className="p-4 sm:p-6">
         <div className="text-center space-y-4">
           {/* Bold Title as requested */}
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground" data-testid="heading-download-app">
             DOWNLODE APP
           </h2>
           
@@ -87,7 +87,8 @@ export default function AppDownload() {
             ) : (
               <Button
                 onClick={handleInstallClick}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                size="lg"
                 data-testid="button-download-app"
               >
                 <Download className="w-5 h-5 mr-2" />
