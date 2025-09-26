@@ -78,3 +78,18 @@ export function AdRectangle({ className = '' }: { className?: string }) {
     </div>
   );
 }
+
+// Horizontal display ad unit 1 - specific slot for premium placement
+export function AdDisplayHorizontal({ className = '' }: { className?: string }) {
+  return (
+    <div className={`my-4 text-center ${className}`} style={{ minHeight: '90px' }}>
+      <div className="text-xs text-muted-foreground mb-2">Advertisement</div>
+      <AdUnit 
+        adSlot="8385039010" 
+        adFormat="auto" 
+        className="max-w-full"
+        style={{ minHeight: '90px' }}
+      />
+    </div>
+  );
+}
