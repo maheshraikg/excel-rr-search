@@ -24,7 +24,7 @@ export default function Footer() {
                   data-testid="button-whatsapp-contact"
                 >
                   <a 
-                    href="https://wa.me/your-number" 
+                    href="https://wa.me/919481460546" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex items-center gap-2"
