@@ -100,30 +100,31 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <FileSpreadsheet className="w-5 h-5 text-primary-foreground" />
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+                <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
               </div>
-              <div>
-                <h1 className="text-xl font-semibold" data-testid="text-app-title">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl font-semibold truncate" data-testid="text-app-title">
                   Excel Data Search
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                   Search RR numbers across uploaded Excel files
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <SocialShare className="hidden sm:flex" />
+            <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
+              <SocialShare className="hidden lg:flex" />
               <Button
                 variant={showFileManagement ? "default" : "outline"}
                 onClick={() => setShowFileManagement(!showFileManagement)}
                 data-testid="button-toggle-file-management"
+                className="text-xs sm:text-sm"
               >
-                <Upload className="w-4 h-4 mr-2" />
-                {showFileManagement ? 'File Management' : 'Manage Files'}
+                <Upload className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{showFileManagement ? 'File Management' : 'Manage Files'}</span>
               </Button>
               <ThemeToggle />
             </div>
@@ -132,14 +133,14 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="space-y-8">
           {showFileManagement ? (
             <>
               {/* File Management Section */}
               <div>
-                <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-                  <Upload className="w-6 h-6" />
+                <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 flex items-center gap-2">
+                  <Upload className="w-5 h-5 sm:w-6 sm:h-6" />
                   File Management
                 </h2>
                 <FileManagement 
@@ -154,17 +155,17 @@ export default function Home() {
               <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
                 <CardContent className="pt-6">
                   <div className="text-center space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                      <Database className="w-8 h-8 text-primary" />
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <Database className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-semibold mb-2">Data Loaded & Ready</h2>
-                      <p className="text-muted-foreground max-w-2xl mx-auto">
+                      <h2 className="text-xl sm:text-2xl font-semibold mb-2">Data Loaded & Ready</h2>
+                      <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-2">
                         Your Excel data has been loaded. Search by RR number to find matching records 
                         from uploaded Excel files.
                       </p>
                     </div>
-                    <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground pt-4">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-8 text-xs sm:text-sm text-muted-foreground pt-4">
                       <div className="flex items-center gap-2">
                         <FileSpreadsheet className="w-4 h-4" />
                         {fileCount} Excel files loaded
@@ -193,9 +194,9 @@ export default function Home() {
               {/* Results Section */}
               {hasSearched && (
                 <div>
-                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <Search className="w-5 h-5" />
-                    Search Results for "{currentSearchTerm}"
+                  <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
+                    <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="break-all">Search Results for "{currentSearchTerm}"</span>
                   </h2>
                   <EnhancedResultsList 
                     searchResults={searchResults}

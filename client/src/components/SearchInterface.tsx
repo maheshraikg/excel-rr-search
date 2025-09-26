@@ -69,22 +69,22 @@ export default function SearchInterface({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Search className="w-5 h-5" />
-            Search RR Numbers
+            <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-lg sm:text-xl">Search RR Numbers</span>
           </div>
           {totalResults > 0 && (
-            <Badge variant="secondary" data-testid="text-results-count">
+            <Badge variant="secondary" data-testid="text-results-count" className="text-xs sm:text-sm w-fit">
               {totalResults} results found
             </Badge>
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
         {/* Main Search Input */}
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1">
             <Input
               placeholder="Enter RR Number (e.g., RR001234)"
@@ -92,35 +92,36 @@ export default function SearchInterface({
               onChange={(e) => setFilters(prev => ({ ...prev, rrNumber: e.target.value }))}
               onKeyPress={handleKeyPress}
               data-testid="input-rr-number"
-              className="text-base"
+              className="text-sm sm:text-base"
             />
           </div>
           <Button 
             onClick={handleSearch}
             disabled={isSearching || !filters.rrNumber.trim()}
             data-testid="button-search"
+            className="w-full sm:w-auto"
           >
             {isSearching ? (
               <>
                 <Search className="w-4 h-4 mr-2 animate-spin" />
-                Searching...
+                <span className="text-sm sm:text-base">Searching...</span>
               </>
             ) : (
               <>
                 <Search className="w-4 h-4 mr-2" />
-                Search
+                <span className="text-sm sm:text-base">Search</span>
               </>
             )}
           </Button>
         </div>
 
         {/* Filters Row */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2">
           <Select 
             value={filters.sheet || "all"} 
             onValueChange={(value) => setFilters(prev => ({ ...prev, sheet: value === "all" ? "" : value }))}
           >
-            <SelectTrigger className="w-40" data-testid="select-sheet">
+            <SelectTrigger className="w-full sm:w-40" data-testid="select-sheet">
               <SelectValue placeholder="All Sheets" />
             </SelectTrigger>
             <SelectContent>
@@ -137,7 +138,7 @@ export default function SearchInterface({
             value={filters.dateRange || "any"} 
             onValueChange={(value) => setFilters(prev => ({ ...prev, dateRange: value === "any" ? "" : value }))}
           >
-            <SelectTrigger className="w-40" data-testid="select-date-range">
+            <SelectTrigger className="w-full sm:w-40" data-testid="select-date-range">
               <SelectValue placeholder="Any Date" />
             </SelectTrigger>
             <SelectContent>
@@ -153,9 +154,10 @@ export default function SearchInterface({
             variant="outline" 
             onClick={handleReset}
             data-testid="button-reset"
+            className="w-full sm:w-auto"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
-            Reset
+            <span className="text-sm sm:text-base">Reset</span>
           </Button>
 
           {totalResults > 0 && (
