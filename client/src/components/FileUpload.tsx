@@ -3,15 +3,9 @@ import { Upload, File, X, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { api, type UploadedFile } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
-interface UploadedFile {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  uploadDate: Date;
-  sheets?: string[];
-}
 
 interface FileUploadProps {
   onFilesUploaded: (files: UploadedFile[]) => void;
@@ -23,6 +17,7 @@ export default function FileUpload({ onFilesUploaded, uploadedFiles, onFileRemov
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -62,19 +57,33 @@ export default function FileUpload({ onFilesUploaded, uploadedFiles, onFileRemov
         setUploadError('Some files were skipped. Only .xls and .xlsx files are supported.');
       }
 
-      const uploadedFiles: UploadedFile[] = validFiles.map(file => ({
-        id: Math.random().toString(36).substr(2, 9),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        uploadDate: new Date(),
-        sheets: ['Sheet1', 'Data'] // Mock sheet names for demo
-      }));
+      if (validFiles.length === 0) {
+        setUploadError('No valid Excel files found.');
+        return;
+      }
 
-      console.log('Files uploaded:', uploadedFiles);
-      onFilesUploaded(uploadedFiles);
+      // Create FileList for API call
+      const fileList = new DataTransfer();
+      validFiles.forEach(file => fileList.items.add(file));
+      
+      const response = await api.uploadFiles(fileList.files);
+      
+      console.log('Files uploaded:', response.files);
+      onFilesUploaded(response.files);
+      
+      toast({
+        title: 'Upload successful',
+        description: `${response.files.length} file(s) uploaded and processed.`,
+      });
+      
     } catch (error) {
-      setUploadError('Failed to upload files. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload files. Please try again.';
+      setUploadError(errorMessage);
+      toast({
+        title: 'Upload failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     } finally {
       setIsUploading(false);
     }
@@ -172,10 +181,10 @@ export default function FileUpload({ onFilesUploaded, uploadedFiles, onFileRemov
                       <File className="w-4 h-4 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium text-sm">{file.name}</p>
+                      <p className="font-medium text-sm">{file.originalName}</p>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span>{formatFileSize(file.size)}</span>
-                        <span>{file.uploadDate.toLocaleDateString()}</span>
+                        <span>{formatFileSize(file.fileSize)}</span>
+                        <span>{new Date(file.uploadDate).toLocaleDateString()}</span>
                         {file.sheets && (
                           <div className="flex gap-1">
                             {file.sheets.map((sheet, idx) => (

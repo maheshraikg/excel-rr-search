@@ -1,106 +1,115 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileSpreadsheet, Search, Database } from 'lucide-react';
 import FileUpload from '@/components/FileUpload';
 import SearchInterface from '@/components/SearchInterface';
 import DataTable from '@/components/DataTable';
 import ThemeToggle from '@/components/ThemeToggle';
 import { Card, CardContent } from '@/components/ui/card';
+import { api, type UploadedFile, type SearchFilters, type SearchResult } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
-interface UploadedFile {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  uploadDate: Date;
-  sheets?: string[];
-}
-
-interface SearchFilters {
-  rrNumber: string;
-  sheet: string;
-  dateRange: string;
-}
-
-interface DataRow {
-  [key: string]: string | number;
-}
-
-interface SheetData {
-  fileName: string;
-  sheetName: string;
-  headers: string[];
-  rows: DataRow[];
-  matchingRows: number[];
-}
 
 export default function Home() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [searchResults, setSearchResults] = useState<SheetData[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [currentSearchTerm, setCurrentSearchTerm] = useState('');
+  const [availableSheets, setAvailableSheets] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Mock data for demo purposes
-  const mockSheetData: SheetData[] = [
-    {
-      fileName: 'Caste survey 24.09.2025.xls',
-      sheetName: 'Survey Data',
-      headers: ['RR Number', 'Name', 'Caste', 'Age', 'Gender', 'District', 'Survey Date'],
-      rows: [
-        { 'RR Number': 'RR001234', 'Name': 'Rajesh Kumar', 'Caste': 'General', 'Age': 32, 'Gender': 'Male', 'District': 'Dakshina Kannada', 'Survey Date': '2024-09-15' },
-        { 'RR Number': 'RR005678', 'Name': 'Priya Sharma', 'Caste': 'OBC', 'Age': 28, 'Gender': 'Female', 'District': 'Udupi', 'Survey Date': '2024-09-16' },
-        { 'RR Number': 'RR009012', 'Name': 'Arun Nayak', 'Caste': 'SC', 'Age': 35, 'Gender': 'Male', 'District': 'Mangalore', 'Survey Date': '2024-09-17' }
-      ],
-      matchingRows: []
-    },
-    {
-      fileName: 'LT1 INST KADABA.xlsx',
-      sheetName: 'Main Data',
-      headers: ['RR Number', 'Institution Name', 'Type', 'Location', 'Established', 'Students Count'],
-      rows: [
-        { 'RR Number': 'RR001234', 'Institution Name': 'Kadaba Primary School', 'Type': 'Primary School', 'Location': 'Kadaba', 'Established': '1985', 'Students Count': 245 },
-        { 'RR Number': 'RR005678', 'Institution Name': 'Kadaba High School', 'Type': 'High School', 'Location': 'Kadaba', 'Established': '1992', 'Students Count': 412 },
-        { 'RR Number': 'RR009012', 'Institution Name': 'Kadaba College', 'Type': 'College', 'Location': 'Kadaba', 'Established': '2001', 'Students Count': 892 }
-      ],
-      matchingRows: []
-    }
-  ];
+  // Load initial data
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        const [files, sheets] = await Promise.all([
+          api.getFiles(),
+          api.getAvailableSheets()
+        ]);
+        setUploadedFiles(files);
+        setAvailableSheets(sheets);
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        toast({
+          title: 'Error loading data',
+          description: 'Failed to load existing files and sheets.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleFilesUploaded = (newFiles: UploadedFile[]) => {
+    loadInitialData();
+  }, [toast]);
+
+  const handleFilesUploaded = async (newFiles: UploadedFile[]) => {
     setUploadedFiles(prev => [...prev, ...newFiles]);
     console.log('Files uploaded:', newFiles);
+    
+    // Refresh available sheets
+    try {
+      const sheets = await api.getAvailableSheets();
+      setAvailableSheets(sheets);
+    } catch (error) {
+      console.error('Error refreshing sheets:', error);
+    }
   };
 
-  const handleFileRemove = (fileId: string) => {
-    setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
-    console.log('File removed:', fileId);
+  const handleFileRemove = async (fileId: string) => {
+    try {
+      await api.deleteFile(fileId);
+      setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
+      
+      // Refresh available sheets
+      const sheets = await api.getAvailableSheets();
+      setAvailableSheets(sheets);
+      
+      toast({
+        title: 'File deleted',
+        description: 'File and its data have been removed.',
+      });
+      
+      console.log('File removed:', fileId);
+    } catch (error) {
+      console.error('Error removing file:', error);
+      toast({
+        title: 'Delete failed',
+        description: 'Failed to delete the file. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleSearch = (filters: SearchFilters) => {
+  const handleSearch = async (filters: SearchFilters) => {
     setIsSearching(true);
     setCurrentSearchTerm(filters.rrNumber);
     console.log('Searching for:', filters);
 
-    // Simulate search delay
-    setTimeout(() => {
-      // Mock search logic - find matching rows
-      const results = mockSheetData.map(sheetData => {
-        const matchingRows: number[] = [];
-        sheetData.rows.forEach((row, index) => {
-          if (row['RR Number']?.toString().toLowerCase().includes(filters.rrNumber.toLowerCase())) {
-            matchingRows.push(index);
-          }
-        });
-        return { ...sheetData, matchingRows };
-      }).filter(sheet => sheet.matchingRows.length > 0);
-
-      setSearchResults(results);
-      setIsSearching(false);
+    try {
+      const response = await api.search(filters);
+      setSearchResults(response.results);
       setHasSearched(true);
-    }, 1000);
+      
+      if (response.totalResults === 0) {
+        toast({
+          title: 'No results found',
+          description: `No data found for RR number "${filters.rrNumber}".`,
+        });
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      toast({
+        title: 'Search failed',
+        description: error instanceof Error ? error.message : 'Search failed. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
-  const availableSheets = uploadedFiles.flatMap(file => file.sheets || []);
   const totalResults = searchResults.reduce((sum, sheet) => sum + sheet.matchingRows.length, 0);
 
   return (
@@ -171,12 +180,12 @@ export default function Home() {
             onFileRemove={handleFileRemove}
           />
 
-          {/* Search Section - Only show if files are uploaded or we have mock data */}
-          {(uploadedFiles.length > 0 || true) && (
+          {/* Search Section - Only show if files are uploaded */}
+          {uploadedFiles.length > 0 && (
             <SearchInterface
               onSearch={handleSearch}
               isSearching={isSearching}
-              availableSheets={availableSheets.length > 0 ? availableSheets : ['Survey Data', 'Main Data', 'Reference']}
+              availableSheets={availableSheets}
               totalResults={totalResults}
             />
           )}
