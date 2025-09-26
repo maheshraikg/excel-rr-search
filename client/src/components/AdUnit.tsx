@@ -1,60 +1,80 @@
 import { useEffect, useRef } from 'react';
 
 interface AdUnitProps {
-  adSlot?: string;
-  adFormat?: 'auto' | 'rectangle' | 'banner' | 'vertical';
+  adSlot: string; // Required slot ID
+  adFormat?: 'auto' | 'fluid';
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export default function AdUnit({ adSlot, adFormat = 'auto', className = '' }: AdUnitProps) {
+export default function AdUnit({ adSlot, adFormat = 'auto', className = '', style }: AdUnitProps) {
   const adRef = useRef<HTMLModElement>(null);
+  const hasBeenPushed = useRef(false);
 
   useEffect(() => {
-    try {
-      // Push the ad for rendering
-      (window as any).adsbygoogle = (window as any).adsbygoogle || [];
-      (window as any).adsbygoogle.push({});
-    } catch (error) {
-      console.log('AdSense error:', error);
+    const element = adRef.current;
+    if (!hasBeenPushed.current && element && element.getAttribute('data-adsbygoogle-status') !== 'done') {
+      try {
+        // Push the ad for rendering only once
+        (window as any).adsbygoogle = (window as any).adsbygoogle || [];
+        (window as any).adsbygoogle.push({});
+        hasBeenPushed.current = true;
+      } catch (error) {
+        console.log('AdSense error:', error);
+      }
     }
   }, []);
 
-  // Auto ads will handle placement automatically, but we can also add manual units
-  if (adFormat === 'auto') {
-    return null; // Auto ads are handled by the main script
-  }
+  const isDevelopment = import.meta.env.DEV;
 
   return (
-    <div className={`ad-container ${className}`}>
+    <div className={`ad-container ${className}`} style={style}>
       <ins
         ref={adRef}
         className="adsbygoogle"
         style={{ display: 'block' }}
         data-ad-client="ca-pub-7493749229509232"
         data-ad-slot={adSlot}
-        data-ad-format={adFormat === 'banner' ? 'banner' : adFormat === 'rectangle' ? 'rectangle' : 'auto'}
+        data-ad-format={adFormat}
         data-full-width-responsive="true"
+        data-adtest={isDevelopment ? 'on' : undefined}
       />
     </div>
   );
 }
 
-// Ad placement component for strategic locations
+// Ad placement component for strategic locations  
 export function AdBanner({ className = '' }: { className?: string }) {
+  // Use environment variables for production, fallback for development
+  const adSlot = import.meta.env.VITE_ADSENSE_SLOT_BANNER || '1234567890';
+  
   return (
-    <div className={`my-4 text-center ${className}`}>
+    <div className={`my-4 text-center ${className}`} style={{ minHeight: '90px' }}>
       <div className="text-xs text-muted-foreground mb-2">Advertisement</div>
-      <AdUnit adFormat="banner" className="max-w-full" />
+      <AdUnit 
+        adSlot={adSlot} 
+        adFormat="auto" 
+        className="max-w-full"
+        style={{ minHeight: '90px' }}
+      />
     </div>
   );
 }
 
 // Rectangle ad for sidebar or between content
 export function AdRectangle({ className = '' }: { className?: string }) {
+  // Use environment variables for production, fallback for development
+  const adSlot = import.meta.env.VITE_ADSENSE_SLOT_RECTANGLE || '9876543210';
+  
   return (
-    <div className={`my-4 text-center ${className}`}>
+    <div className={`my-4 text-center ${className}`} style={{ minHeight: '280px' }}>
       <div className="text-xs text-muted-foreground mb-2">Advertisement</div>
-      <AdUnit adFormat="rectangle" className="mx-auto" />
+      <AdUnit 
+        adSlot={adSlot} 
+        adFormat="auto" 
+        className="mx-auto"
+        style={{ minHeight: '280px', maxWidth: '336px' }}
+      />
     </div>
   );
 }
