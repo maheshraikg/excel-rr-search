@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Share2, Copy, Eye, EyeOff, ChevronDown, ChevronUp, Search, FileSpreadsheet, ClipboardList, File } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Share2, Copy, Eye, EyeOff, ChevronDown, ChevronUp, Search, FileSpreadsheet, ClipboardList, File, Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ interface SheetData {
   headers: string[];
   rows: DataRow[];
   matchingRows: number[];
+  matchType?: 'exact' | 'partial';
+  exactRRNumber?: string;
 }
 
 interface EnhancedResultsListProps {
@@ -25,6 +27,22 @@ interface EnhancedResultsListProps {
 export default function EnhancedResultsList({ searchResults, searchTerm }: EnhancedResultsListProps) {
   const { toast } = useToast();
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+  
+  // Auto-expand exact matches on first load
+  useEffect(() => {
+    const initialExpanded: Record<string, boolean> = {};
+    
+    searchResults.forEach((sheetData) => {
+      if (sheetData.matchType === 'exact') {
+        sheetData.matchingRows.forEach((rowIndex) => {
+          const cardId = `${sheetData.fileName}-${sheetData.sheetName}-${rowIndex}`;
+          initialExpanded[cardId] = true;
+        });
+      }
+    });
+    
+    setExpandedCards(initialExpanded);
+  }, [searchResults]);
 
   const highlightText = (text: string, searchTerm: string): React.ReactNode => {
     if (!searchTerm) return text;
@@ -95,7 +113,7 @@ export default function EnhancedResultsList({ searchResults, searchTerm }: Enhan
     );
   }
 
-  // Flatten all results for the list view
+  // Flatten all results for the list view (exact matches are already prioritized from backend)
   const allResults = searchResults.flatMap((sheetData) => 
     sheetData.matchingRows.map((rowIndex, resultIndex) => {
       const row = sheetData.rows[rowIndex];
@@ -108,7 +126,8 @@ export default function EnhancedResultsList({ searchResults, searchTerm }: Enhan
         row,
         sheetData,
         rowIndex: rowIndex + 1,
-        resultIndex: resultIndex + 1
+        resultIndex: resultIndex + 1,
+        isExactMatch: sheetData.matchType === 'exact'
       };
     })
   );
@@ -130,7 +149,7 @@ export default function EnhancedResultsList({ searchResults, searchTerm }: Enhan
 
       {/* Results List */}
       <div className="space-y-4">
-        {allResults.map(({ cardId, rrNumber, row, sheetData, rowIndex, resultIndex }) => {
+        {allResults.map(({ cardId, rrNumber, row, sheetData, rowIndex, resultIndex, isExactMatch }) => {
           const isExpanded = expandedCards[cardId];
           
           // Extract primary fields for preview
@@ -143,17 +162,33 @@ export default function EnhancedResultsList({ searchResults, searchTerm }: Enhan
             }, {} as Record<string, string | number>);
 
           return (
-            <Card key={cardId} className="overflow-hidden border hover-elevate">
+            <Card key={cardId} className={`overflow-hidden border hover-elevate ${
+              isExactMatch 
+                ? 'border-amber-400 bg-gradient-to-r from-amber-50/50 to-yellow-50/50 dark:from-amber-950/20 dark:to-yellow-950/20 shadow-amber-100 dark:shadow-amber-900/20' 
+                : ''
+            }`}>
               <CardHeader className="pb-3 p-3 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 min-w-0">
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg font-bold text-sm sm:text-lg shadow-lg break-all flex items-center gap-2">
-                      <Search className="w-4 h-4 flex-shrink-0" />
-                      RR: {highlightText(rrNumber, searchTerm)}
+                    <div className={`px-3 sm:px-4 py-2 rounded-lg font-bold text-sm sm:text-lg shadow-lg break-all flex items-center gap-2 ${
+                      isExactMatch 
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white' 
+                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
+                    }`}>
+                      {isExactMatch ? <Star className="w-4 h-4 flex-shrink-0" /> : <Search className="w-4 h-4 flex-shrink-0" />}
+                      {isExactMatch ? 'EXACT MATCH - RR:' : 'RR:'} {highlightText(rrNumber, searchTerm)}
                     </div>
-                    <Badge variant="outline" className="text-xs w-fit">
-                      Row {rowIndex} • {sheetData.sheetName}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs w-fit">
+                        Row {rowIndex} • {sheetData.sheetName}
+                      </Badge>
+                      {isExactMatch && (
+                        <Badge variant="default" className="text-xs bg-amber-500 hover:bg-amber-600 text-white">
+                          <Star className="w-3 h-3 mr-1" />
+                          Exact Match
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-1 sm:gap-2 justify-end">
                     <Button
