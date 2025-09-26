@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { FileSpreadsheet, Search, Database, Upload } from 'lucide-react';
 import SearchInterface from '@/components/SearchInterface';
-import DataTable from '@/components/DataTable';
+import EnhancedResultsList from '@/components/EnhancedResultsList';
 import FileManagement from '@/components/FileManagement';
 import ThemeToggle from '@/components/ThemeToggle';
+import Footer from '@/components/Footer';
+import SocialShare from '@/components/SocialShare';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { api, type SearchFilters, type SearchResult } from '@/lib/api';
@@ -114,6 +116,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <SocialShare className="hidden sm:flex" />
               <Button
                 variant={showFileManagement ? "default" : "outline"}
                 onClick={() => setShowFileManagement(!showFileManagement)}
@@ -194,7 +197,7 @@ export default function Home() {
                     <Search className="w-5 h-5" />
                     Search Results for "{currentSearchTerm}"
                   </h2>
-                  <DataTable 
+                  <EnhancedResultsList 
                     searchResults={searchResults}
                     searchTerm={currentSearchTerm}
                   />
@@ -204,6 +207,7 @@ export default function Home() {
           )}
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
