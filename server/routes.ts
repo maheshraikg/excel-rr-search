@@ -5,6 +5,7 @@ import * as XLSX from "xlsx";
 import { storage } from "./storage";
 import { insertFileSchema, insertDataSchema, searchSchema } from "@shared/schema";
 import { z } from "zod";
+import { loadUserData } from "./load-data";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -102,6 +103,8 @@ async function processExcelFile(fileBuffer: Buffer, fileName: string, originalNa
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Load user's Excel data on startup
+  await loadUserData();
   
   // Upload Excel files
   app.post('/api/files/upload', upload.array('files', 10), async (req, res) => {
