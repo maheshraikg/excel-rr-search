@@ -194,6 +194,9 @@ export default function Home() {
                 totalResults={totalResults}
               />
 
+              {/* App Download Section - Always visible */}
+              <AppDownload />
+
               {/* Results Section */}
               {hasSearched && (
                 <div>
@@ -206,16 +209,13 @@ export default function Home() {
                     searchTerm={currentSearchTerm}
                   />
                   
-                  {/* Strategic Ad Placement - After Results */}
-                  <AdBanner className="my-6" />
+                  {/* Strategic Ad Placement - After Results (most clickable spot) */}
+                  <AdBanner className="my-8" />
                 </div>
               )}
 
-              {/* App Download Section - Show after search */}
-              {hasSearched && <AppDownload />}
-
-              {/* Ad between sections */}
-              {hasSearched && <AdRectangle className="my-6" />}
+              {/* Strategic Ad Placement - Between sections when content is viewed */}
+              {hasSearched && <AdRectangle className="my-8" />}
 
               {/* Social Media Sharing Section - Show after search */}
               {hasSearched && <SocialMediaSharing />}
