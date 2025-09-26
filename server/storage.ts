@@ -20,6 +20,7 @@ export interface IStorage {
   saveExcelData(data: InsertExcelData[]): Promise<void>;
   searchByRRNumber(filters: SearchFilters): Promise<SearchResult[]>;
   getAvailableSheets(): Promise<string[]>;
+  getFileRowCount(fileId: string): Promise<number>;
 }
 
 export class MemStorage implements IStorage {
@@ -124,6 +125,11 @@ export class MemStorage implements IStorage {
       sheets.add(data.sheetName);
     }
     return Array.from(sheets);
+  }
+
+  async getFileRowCount(fileId: string): Promise<number> {
+    const dataEntries = Array.from(this.excelData.values());
+    return dataEntries.filter(data => data.fileId === fileId).length;
   }
 }
 
