@@ -78,7 +78,8 @@ export class MemStorage implements IStorage {
 
   async searchByRRNumber(filters: SearchFilters): Promise<SearchResult[]> {
     const { rrNumber, sheet } = filters;
-    const results = new Map<string, SearchResult>();
+    const exactMatches = new Map<string, SearchResult>();
+    const partialMatches = new Map<string, SearchResult>();
 
     // Search through all data rows
     const dataEntries = Array.from(this.excelData.values());
@@ -86,36 +87,67 @@ export class MemStorage implements IStorage {
       // Filter by sheet if specified
       if (sheet && data.sheetName !== sheet) continue;
 
-      // Check if RR number matches
-      const matchesRR = data.rrNumber?.toLowerCase().includes(rrNumber.toLowerCase()) ||
-                       Object.values(data.rowData).some(value => 
-                         value?.toString().toLowerCase().includes(rrNumber.toLowerCase())
-                       );
+      // Check for exact match first
+      let isExactMatch = false;
+      let matchedRRNumber = '';
+      
+      if (data.rrNumber?.toLowerCase() === rrNumber.toLowerCase()) {
+        isExactMatch = true;
+        matchedRRNumber = data.rrNumber;
+      } else {
+        // Check for exact match in any field
+        for (const [key, value] of Object.entries(data.rowData)) {
+          if (value?.toString().toLowerCase() === rrNumber.toLowerCase()) {
+            isExactMatch = true;
+            matchedRRNumber = value.toString();
+            break;
+          }
+        }
+      }
 
-      if (matchesRR) {
+      // If not exact match, check for partial match
+      let isPartialMatch = false;
+      if (!isExactMatch) {
+        isPartialMatch = data.rrNumber?.toLowerCase().includes(rrNumber.toLowerCase()) ||
+                        Object.values(data.rowData).some(value => 
+                          value?.toString().toLowerCase().includes(rrNumber.toLowerCase())
+                        );
+      }
+
+      if (isExactMatch || isPartialMatch) {
         const file = this.excelFiles.get(data.fileId);
         if (!file) continue;
 
+        // Use different maps for exact vs partial matches
+        const resultsMap = isExactMatch ? exactMatches : partialMatches;
+        const matchType = isExactMatch ? 'exact' : 'partial';
+        
         // Use fileId instead of fileName to avoid collisions
         const key = `${file.id}-${data.sheetName}`;
         
-        if (!results.has(key)) {
-          results.set(key, {
+        if (!resultsMap.has(key)) {
+          resultsMap.set(key, {
             fileName: file.originalName,
             sheetName: data.sheetName,
             headers: data.headers,
             rows: [],
-            matchingRows: []
+            matchingRows: [],
+            matchType: matchType as 'exact' | 'partial',
+            exactRRNumber: isExactMatch ? matchedRRNumber : undefined
           });
         }
 
-        const result = results.get(key)!;
+        const result = resultsMap.get(key)!;
         result.rows.push(data.rowData);
         result.matchingRows.push(result.rows.length - 1);
       }
     }
 
-    return Array.from(results.values());
+    // Return exact matches first, then partial matches
+    const exactResults = Array.from(exactMatches.values());
+    const partialResults = Array.from(partialMatches.values());
+    
+    return [...exactResults, ...partialResults];
   }
 
   async getAvailableSheets(): Promise<string[]> {
