@@ -57,4 +57,6 @@ export type SearchResult = {
   headers: string[];
   rows: Record<string, any>[];
   matchingRows: number[];
+  matchType: 'exact' | 'partial'; // Type of match for prioritization
+  exactRRNumber?: string; // The exact RR number that was matched
 };
