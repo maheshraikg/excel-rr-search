@@ -35,7 +35,7 @@ export default function Home() {
         api.getAvailableSheets()
       ]);
       setFileCount(files.length);
-      setUploadedFiles(files);
+      setUploadedFiles(files.map(file => ({ ...file, uploadDate: new Date(file.uploadDate) })));
       setAvailableSheets(sheets);
     } catch (error) {
       console.error('Error loading initial data:', error);
