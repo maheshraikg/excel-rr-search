@@ -117,14 +117,14 @@ export default function SearchInterface({
         {/* Filters Row */}
         <div className="flex flex-wrap gap-2">
           <Select 
-            value={filters.sheet} 
-            onValueChange={(value) => setFilters(prev => ({ ...prev, sheet: value }))}
+            value={filters.sheet || "all"} 
+            onValueChange={(value) => setFilters(prev => ({ ...prev, sheet: value === "all" ? "" : value }))}
           >
             <SelectTrigger className="w-40" data-testid="select-sheet">
               <SelectValue placeholder="All Sheets" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Sheets</SelectItem>
+              <SelectItem value="all">All Sheets</SelectItem>
               {availableSheets.map((sheet) => (
                 <SelectItem key={sheet} value={sheet}>
                   {sheet}
@@ -134,14 +134,14 @@ export default function SearchInterface({
           </Select>
 
           <Select 
-            value={filters.dateRange} 
-            onValueChange={(value) => setFilters(prev => ({ ...prev, dateRange: value }))}
+            value={filters.dateRange || "any"} 
+            onValueChange={(value) => setFilters(prev => ({ ...prev, dateRange: value === "any" ? "" : value }))}
           >
             <SelectTrigger className="w-40" data-testid="select-date-range">
               <SelectValue placeholder="Any Date" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any Date</SelectItem>
+              <SelectItem value="any">Any Date</SelectItem>
               <SelectItem value="today">Today</SelectItem>
               <SelectItem value="week">This Week</SelectItem>
               <SelectItem value="month">This Month</SelectItem>
