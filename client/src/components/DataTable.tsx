@@ -1,7 +1,24 @@
-import { FileText, Copy } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getExpandedRowModel,
+  flexRender,
+  type ColumnDef,
+  type SortingState,
+  type ExpandedState,
+  type ColumnPinningState,
+  type VisibilityState,
+} from '@tanstack/react-table';
+import { FileText, ChevronDown, ChevronRight, Copy, Eye, EyeOff, Settings, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useToast } from '@/hooks/use-toast';
 
 interface DataRow {
   [key: string]: string | number;
@@ -20,15 +37,67 @@ interface DataTableProps {
   searchTerm: string;
 }
 
-export default function DataTable({ searchResults, searchTerm }: DataTableProps) {
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    console.log('Copied to clipboard:', text);
-  };
+interface FlattenedRow {
+  id: string;
+  rrNumber: string;
+  sheetName: string;
+  fileName: string;
+  rowIndex: number;
+  data: DataRow;
+  primaryFields: { [key: string]: string | number };
+}
 
-  const highlightText = (text: string, searchTerm: string) => {
+export default function DataTable({ searchResults, searchTerm }: DataTableProps) {
+  const { toast } = useToast();
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [expanded, setExpanded] = useState<ExpandedState>({});
+  const [expandedSheets, setExpandedSheets] = useState<Record<string, boolean>>({});
+  const [compactView, setCompactView] = useState(true);
+  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
+    left: ['expander', 'rrNumber'],
+  });
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+
+  // Flatten all results into a single table format
+  const flattenedData = useMemo(() => {
+    const data: FlattenedRow[] = [];
+    
+    searchResults.forEach((sheetData) => {
+      sheetData.matchingRows.forEach((rowIndex) => {
+        const row = sheetData.rows[rowIndex];
+        const rrNumber = row['RR Number'] || row['RRNo'] || row['RR_Number'] || '';
+        
+        // Extract key fields for the compact view
+        const primaryFields: { [key: string]: string | number } = {};
+        const keyFields = ['RR Number', 'RRNo', 'CustomerName', 'UHID', 'District', 'Taluk', 'VillageName', 'Village Name'];
+        
+        keyFields.forEach(field => {
+          if (row[field] !== undefined && row[field] !== '') {
+            primaryFields[field] = row[field];
+          }
+        });
+
+        data.push({
+          id: `${sheetData.fileName}-${sheetData.sheetName}-${rowIndex}`,
+          rrNumber: rrNumber.toString(),
+          sheetName: sheetData.sheetName,
+          fileName: sheetData.fileName,
+          rowIndex: rowIndex + 1,
+          data: row,
+          primaryFields
+        });
+      });
+    });
+    
+    return data;
+  }, [searchResults]);
+
+  const highlightText = (text: string, searchTerm: string): React.ReactNode => {
     if (!searchTerm) return text;
-    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    
+    // Escape special regex characters to prevent errors
+    const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedTerm})`, 'gi');
     const parts = text.toString().split(regex);
     
     return parts.map((part, index) => 
@@ -39,6 +108,140 @@ export default function DataTable({ searchResults, searchTerm }: DataTableProps)
       ) : part
     );
   };
+
+  const copyToClipboard = (row: FlattenedRow) => {
+    const recordText = Object.entries(row.data)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join('\n');
+    navigator.clipboard.writeText(recordText);
+    toast({
+      title: 'Copied to clipboard',
+      description: `Record for RR ${row.rrNumber} copied successfully.`,
+    });
+  };
+
+  const columns = useMemo<ColumnDef<FlattenedRow>[]>(() => [
+    {
+      id: 'expander',
+      header: '',
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={row.getToggleExpandedHandler()}
+          className="p-1"
+          data-testid={`button-expand-${row.id}`}
+        >
+          {row.getIsExpanded() ? (
+            <ChevronDown className="w-4 h-4" />
+          ) : (
+            <ChevronRight className="w-4 h-4" />
+          )}
+        </Button>
+      ),
+      size: 40,
+    },
+    {
+      accessorKey: 'rrNumber',
+      header: 'RR Number',
+      cell: ({ getValue }) => (
+        <div className="font-mono font-medium text-primary">
+          {highlightText(getValue() as string, searchTerm)}
+        </div>
+      ),
+      size: 120,
+      enableSorting: true,
+    },
+    {
+      accessorKey: 'fileName',
+      header: 'Source File',
+      cell: ({ getValue }) => (
+        <div className="text-sm text-muted-foreground truncate max-w-32">
+          {getValue() as string}
+        </div>
+      ),
+      size: 140,
+      enableSorting: true,
+    },
+    {
+      accessorKey: 'sheetName',
+      header: 'Sheet',
+      cell: ({ getValue }) => (
+        <Badge variant="outline" className="text-xs">
+          {getValue() as string}
+        </Badge>
+      ),
+      size: 100,
+      enableSorting: true,
+    },
+    {
+      id: 'primaryInfo',
+      header: 'Key Information',
+      cell: ({ row }) => {
+        const fields = row.original.primaryFields;
+        const entries = Object.entries(fields).slice(0, compactView ? 2 : 4);
+        
+        return (
+          <div className="space-y-1">
+            {entries.map(([key, value], index) => (
+              <div key={index} className="text-sm">
+                <span className="text-muted-foreground">{key}: </span>
+                <span className="text-foreground">
+                  {highlightText(value.toString(), searchTerm)}
+                </span>
+              </div>
+            ))}
+          </div>
+        );
+      },
+      size: 250,
+    },
+    {
+      accessorKey: 'rowIndex',
+      header: 'Row #',
+      cell: ({ getValue }) => (
+        <div className="text-xs text-muted-foreground">
+          #{getValue() as number}
+        </div>
+      ),
+      size: 60,
+      enableSorting: true,
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => copyToClipboard(row.original)}
+          data-testid={`button-copy-${row.id}`}
+        >
+          <Copy className="w-3 h-3" />
+        </Button>
+      ),
+      size: 60,
+    },
+  ], [searchTerm, compactView]);
+
+  const table = useReactTable({
+    data: flattenedData,
+    columns,
+    state: {
+      sorting,
+      expanded,
+      columnPinning,
+      columnVisibility,
+    },
+    onSortingChange: setSorting,
+    onExpandedChange: setExpanded,
+    onColumnPinningChange: setColumnPinning,
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    getRowCanExpand: () => true,
+  });
 
   if (searchResults.length === 0) {
     return (
@@ -54,87 +257,225 @@ export default function DataTable({ searchResults, searchTerm }: DataTableProps)
     );
   }
 
+  // Group results by sheet for the grouped view
+  const groupedResults = useMemo(() => {
+    const groups: Record<string, SheetData> = {};
+    searchResults.forEach((sheet) => {
+      const key = `${sheet.fileName} - ${sheet.sheetName}`;
+      groups[key] = sheet;
+    });
+    return groups;
+  }, [searchResults]);
+
   return (
     <div className="space-y-6">
-      {searchResults.map((sheetData, sheetIndex) => (
-        <Card key={`${sheetData.fileName}-${sheetData.sheetName}`} className="overflow-hidden">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5" />
-                <div>
-                  <p className="text-base">{sheetData.fileName}</p>
-                  <p className="text-sm text-muted-foreground font-normal">
-                    Sheet: {sheetData.sheetName}
-                  </p>
-                </div>
-              </div>
-              <Badge variant="secondary" data-testid={`badge-matches-${sheetIndex}`}>
-                {sheetData.matchingRows.length} matches
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="space-y-6">
-              {sheetData.matchingRows.map((rowIndex) => {
-                const row = sheetData.rows[rowIndex];
-                return (
-                  <div 
-                    key={rowIndex} 
-                    className="border rounded-lg p-4 bg-muted/30"
-                    data-testid={`result-${sheetIndex}-${rowIndex}`}
+      {/* Results Toolbar */}
+      <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+        <div className="flex items-center gap-4">
+          <Badge variant="secondary" className="text-sm">
+            {flattenedData.length} records found
+          </Badge>
+          <Badge variant="outline" className="text-sm">
+            {searchResults.length} sheets
+          </Badge>
+        </div>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" data-testid="button-column-settings">
+                <Settings className="w-4 h-4 mr-2" />
+                Columns
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {table.getAllLeafColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
                   >
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-medium text-sm text-muted-foreground">
-                        Record #{rowIndex + 1}
-                      </h4>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          const recordText = Object.entries(row)
-                            .map(([key, value]) => `${key}: ${value}`)
-                            .join('\n');
-                          copyToClipboard(recordText);
+                    {column.columnDef.header as string || column.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCompactView(!compactView)}
+            data-testid="button-toggle-view"
+          >
+            {compactView ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
+            {compactView ? 'Detailed View' : 'Compact View'}
+          </Button>
+        </div>
+      </div>
+
+      {/* Unified Data Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Search Results
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="relative overflow-auto max-h-[600px]">
+            <Table>
+              <TableHeader className="sticky top-0 bg-background z-10">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead 
+                        key={header.id}
+                        className={`bg-background border-b ${
+                          header.column.getIsPinned() === 'left' 
+                            ? 'sticky left-0 z-20 border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60' 
+                            : ''
+                        }`}
+                        style={{ 
+                          width: header.getSize(),
+                          left: header.column.getIsPinned() === 'left' ? `${header.column.getStart('left')}px` : undefined
                         }}
-                        data-testid={`button-copy-${sheetIndex}-${rowIndex}`}
                       >
-                        <Copy className="w-3 h-3 mr-2" />
-                        Copy
-                      </Button>
-                    </div>
-                    
-                    <div className="grid gap-3">
-                      {sheetData.headers.map((header, headerIndex) => {
-                        const value = row[header];
-                        return (
-                          <div key={headerIndex} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                            <div className="font-medium text-sm min-w-0 sm:min-w-[200px] text-foreground">
-                              {header}:
-                            </div>
-                            <div className="text-sm text-muted-foreground break-words flex-1">
-                              {value ? (
-                                <span className="text-foreground">
-                                  {highlightText(value.toString(), searchTerm)}
-                                </span>
-                              ) : (
-                                <span className="italic text-muted-foreground">
-                                  (empty)
-                                </span>
+                        {header.isPlaceholder ? null : (
+                          <div
+                            className={
+                              header.column.getCanSort()
+                                ? 'cursor-pointer select-none hover:bg-muted/50 p-2 -m-2 rounded flex items-center gap-1'
+                                : 'flex items-center gap-1'
+                            }
+                            onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
+                          >
+                            <span>
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
                               )}
+                            </span>
+                            {header.column.getCanSort() && (
+                              <span className="text-muted-foreground">
+                                {{
+                                  asc: '↑',
+                                  desc: '↓',
+                                }[header.column.getIsSorted() as string] ?? '↕'}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <>
+                    <TableRow 
+                      key={row.id} 
+                      className="hover:bg-muted/50"
+                      data-testid={`table-row-${row.id}`}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell 
+                          key={cell.id} 
+                          className={`py-3 ${
+                            cell.column.getIsPinned() === 'left'
+                              ? 'sticky left-0 z-10 border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
+                              : ''
+                          }`}
+                          style={{
+                            left: cell.column.getIsPinned() === 'left' ? `${cell.column.getStart('left')}px` : undefined
+                          }}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    {row.getIsExpanded() && (
+                      <TableRow key={`${row.id}-expanded`}>
+                        <TableCell colSpan={columns.length} className="bg-muted/20">
+                          <div className="p-4 space-y-3">
+                            <h4 className="font-medium text-sm">Complete Record Details</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {Object.entries(row.original.data).map(([key, value], index) => (
+                                <div key={index} className="text-sm">
+                                  <span className="font-medium text-muted-foreground">{key}:</span>
+                                  <div className="text-foreground mt-1">
+                                    {value ? (
+                                      highlightText(value.toString(), searchTerm)
+                                    ) : (
+                                      <span className="italic text-muted-foreground">(empty)</span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        );
-                      })}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sheet-by-Sheet Breakdown */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Results by Sheet</h3>
+        {Object.entries(groupedResults).map(([sheetKey, sheetData]) => {
+          const isExpanded = expandedSheets[sheetKey] ?? false;
+          
+          return (
+            <Collapsible 
+              key={sheetKey}
+              open={isExpanded}
+              onOpenChange={(open) => setExpandedSheets(prev => ({ ...prev, [sheetKey]: open }))}
+            >
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="hover:bg-muted/50 cursor-pointer">
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          {isExpanded ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-base">{sheetData.fileName}</p>
+                          <p className="text-sm text-muted-foreground font-normal">
+                            Sheet: {sheetData.sheetName}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="secondary">
+                        {sheetData.matchingRows.length} matches
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0">
+                    <div className="text-sm text-muted-foreground">
+                      Click to view detailed breakdown by sheet
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          );
+        })}
+      </div>
     </div>
   );
 }
