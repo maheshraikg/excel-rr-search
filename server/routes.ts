@@ -107,39 +107,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await loadUserData();
   
   // Upload Excel files
-  app.post('/api/files/upload', upload.array('files', 10), async (req, res) => {
+  app.post('/api/upload', upload.single('excelFile'), async (req, res) => {
     try {
-      const files = req.files as Express.Multer.File[];
+      const file = req.file as Express.Multer.File;
       
-      if (!files || files.length === 0) {
-        return res.status(400).json({ error: 'No files uploaded' });
+      if (!file) {
+        return res.status(400).json({ error: 'No file uploaded' });
       }
       
-      const uploadedFiles = [];
+      console.log('Processing uploaded file:', file.originalname);
       
-      for (const file of files) {
-        try {
-          const processedFile = await processExcelFile(
-            file.buffer,
-            file.filename || file.originalname,
-            file.originalname,
-            file.mimetype
-          );
-          uploadedFiles.push(processedFile);
-        } catch (error) {
-          console.error(`Error processing file ${file.originalname}:`, error);
-          // Continue with other files
-        }
-      }
+      const processedFile = await processExcelFile(
+        file.buffer,
+        file.filename || file.originalname,
+        file.originalname,
+        file.mimetype
+      );
+      
+      const rowCount = await storage.getFileRowCount(processedFile.id);
       
       res.json({ 
-        message: `Successfully uploaded ${uploadedFiles.length} files`,
-        files: uploadedFiles 
+        message: `Successfully uploaded ${file.originalname}`,
+        file: {
+          ...processedFile,
+          rowCount,
+          sheetCount: processedFile.sheets.length
+        }
       });
       
     } catch (error) {
       console.error('Upload error:', error);
-      res.status(500).json({ error: 'Failed to upload files' });
+      res.status(500).json({ error: 'Failed to upload file' });
     }
   });
   

@@ -10,14 +10,16 @@ import {
   type ExpandedState,
   type ColumnPinningState,
   type VisibilityState,
+  type RowSelectionState,
 } from '@tanstack/react-table';
-import { FileText, ChevronDown, ChevronRight, Copy, Eye, EyeOff, Settings, Check } from 'lucide-react';
+import { FileText, ChevronDown, ChevronRight, Copy, Eye, EyeOff, Settings, Check, Download, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 
 interface DataRow {
@@ -54,9 +56,10 @@ export default function DataTable({ searchResults, searchTerm }: DataTableProps)
   const [expandedSheets, setExpandedSheets] = useState<Record<string, boolean>>({});
   const [compactView, setCompactView] = useState(true);
   const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
-    left: ['expander', 'rrNumber'],
+    left: ['select', 'expander', 'rrNumber'],
   });
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   // Flatten all results into a single table format
   const flattenedData = useMemo(() => {
@@ -100,13 +103,15 @@ export default function DataTable({ searchResults, searchTerm }: DataTableProps)
     const regex = new RegExp(`(${escapedTerm})`, 'gi');
     const parts = text.toString().split(regex);
     
-    return parts.map((part, index) => 
-      regex.test(part) ? (
-        <mark key={index} className="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">
+    return parts.map((part, index) => {
+      // Use non-stateful comparison instead of regex.test to avoid global flag issues
+      const isMatch = part.toLowerCase() === searchTerm.toLowerCase();
+      return isMatch ? (
+        <mark key={`highlight-${index}-${part}`} className="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">
           {part}
         </mark>
-      ) : part
-    );
+      ) : part;
+    });
   };
 
   const copyToClipboard = (row: FlattenedRow) => {
@@ -121,6 +126,28 @@ export default function DataTable({ searchResults, searchTerm }: DataTableProps)
   };
 
   const columns = useMemo<ColumnDef<FlattenedRow>[]>(() => [
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+          data-testid="checkbox-select-all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+          data-testid={`checkbox-select-${row.id}`}
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+      size: 40,
+    },
     {
       id: 'expander',
       header: '',
@@ -139,6 +166,8 @@ export default function DataTable({ searchResults, searchTerm }: DataTableProps)
           )}
         </Button>
       ),
+      enableSorting: false,
+      enableHiding: false,
       size: 40,
     },
     {
@@ -183,8 +212,8 @@ export default function DataTable({ searchResults, searchTerm }: DataTableProps)
         
         return (
           <div className="space-y-1">
-            {entries.map(([key, value], index) => (
-              <div key={index} className="text-sm">
+            {entries.map(([key, value]) => (
+              <div key={key} className="text-sm">
                 <span className="text-muted-foreground">{key}: </span>
                 <span className="text-foreground">
                   {highlightText(value.toString(), searchTerm)}
@@ -232,15 +261,18 @@ export default function DataTable({ searchResults, searchTerm }: DataTableProps)
       expanded,
       columnPinning,
       columnVisibility,
+      rowSelection,
     },
     onSortingChange: setSorting,
     onExpandedChange: setExpanded,
     onColumnPinningChange: setColumnPinning,
     onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     getRowCanExpand: () => true,
+    enableRowSelection: true,
   });
 
   if (searchResults.length === 0) {
@@ -278,8 +310,47 @@ export default function DataTable({ searchResults, searchTerm }: DataTableProps)
           <Badge variant="outline" className="text-sm">
             {searchResults.length} sheets
           </Badge>
+          {Object.keys(rowSelection).length > 0 && (
+            <Badge variant="default" className="text-sm">
+              {Object.keys(rowSelection).length} selected
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          {Object.keys(rowSelection).length > 0 && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const selectedRows = table.getSelectedRowModel().rows;
+                  const combinedText = selectedRows
+                    .map(row => Object.entries(row.original.data)
+                      .map(([key, value]) => `${key}: ${value}`)
+                      .join('\n'))
+                    .join('\n\n---\n\n');
+                  navigator.clipboard.writeText(combinedText);
+                  toast({
+                    title: 'Copied to clipboard',
+                    description: `${selectedRows.length} records copied successfully.`,
+                  });
+                }}
+                data-testid="button-copy-selected"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Copy Selected ({Object.keys(rowSelection).length})
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRowSelection({})}
+                data-testid="button-clear-selection"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear Selection
+              </Button>
+            </>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" data-testid="button-column-settings">
@@ -401,8 +472,8 @@ export default function DataTable({ searchResults, searchTerm }: DataTableProps)
                           <div className="p-4 space-y-3">
                             <h4 className="font-medium text-sm">Complete Record Details</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                              {Object.entries(row.original.data).map(([key, value], index) => (
-                                <div key={index} className="text-sm">
+                              {Object.entries(row.original.data).map(([key, value]) => (
+                                <div key={key} className="text-sm">
                                   <span className="font-medium text-muted-foreground">{key}:</span>
                                   <div className="text-foreground mt-1">
                                     {value ? (
