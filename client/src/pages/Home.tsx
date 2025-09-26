@@ -6,6 +6,8 @@ import FileManagement from '@/components/FileManagement';
 import ThemeToggle from '@/components/ThemeToggle';
 import Footer from '@/components/Footer';
 import SocialShare from '@/components/SocialShare';
+import AppDownload from '@/components/AppDownload';
+import SocialMediaSharing from '@/components/SocialMediaSharing';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { api, type SearchFilters, type SearchResult } from '@/lib/api';
@@ -204,6 +206,12 @@ export default function Home() {
                   />
                 </div>
               )}
+
+              {/* App Download Section */}
+              <AppDownload />
+
+              {/* Social Media Sharing Section */}
+              <SocialMediaSharing />
             </>
           )}
         </div>
