@@ -194,9 +194,6 @@ export default function Home() {
                 totalResults={totalResults}
               />
 
-              {/* App Download Section - Always visible */}
-              <AppDownload />
-
               {/* Results Section */}
               {hasSearched && (
                 <div>
@@ -213,6 +210,9 @@ export default function Home() {
                   <AdBanner className="my-8" />
                 </div>
               )}
+
+              {/* App Download Section - Always visible */}
+              <AppDownload />
 
               {/* Strategic Ad Placement - Between sections when content is viewed */}
               {hasSearched && <AdRectangle className="my-8" />}
