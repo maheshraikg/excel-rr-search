@@ -33,14 +33,16 @@ ssh root@your_vps_ip_address
 
 ## 🗄️ Step 2: Database Setup (Choose One)
 
-### Option A: Use Neon (Recommended - Free)
+### Option A: Use Neon (Recommended - Easy & Free)
 1. Go to [neon.tech](https://neon.tech) and create free account
 2. Create new project, copy connection string:
    ```
    postgresql://username:password@ep-xxxxx.us-east-1.aws.neon.tech/database?sslmode=require
    ```
+3. **Note**: Your app is already configured for Neon hosting - no additional changes needed!
 
-### Option B: Install PostgreSQL on VPS
+### Option B: Install PostgreSQL on VPS (Advanced Users)
+**Note**: This requires changing your app's database driver from Neon to standard PostgreSQL.
 ```bash
 # Update system
 sudo apt update && sudo apt upgrade -y
@@ -59,6 +61,11 @@ CREATE USER excel_user WITH ENCRYPTED PASSWORD 'your_secure_password';
 GRANT ALL PRIVILEGES ON DATABASE excel_search_db TO excel_user;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 \q
+
+# If using local PostgreSQL, you'll need to modify server/db.ts:
+# Replace @neondatabase/serverless with pg package
+# Replace drizzle-orm/neon-serverless with drizzle-orm/node-postgres
+# This is advanced - Neon option is much easier!
 ```
 
 ## 📁 Step 3: Deploy Your Application
@@ -109,8 +116,11 @@ npm run db:push
 # Build the application
 npm run build
 
-# Start with PM2
-pm2 start server/index.js --name "excel-search-app"
+# Start with PM2 (use production build)
+pm2 start dist/index.js --name "excel-search-app"
+
+# Alternative: use npm start
+# pm2 start npm --name "excel-search-app" -- start
 pm2 startup
 pm2 save
 ```
