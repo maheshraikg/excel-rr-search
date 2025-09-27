@@ -3,7 +3,9 @@ import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "../shared/schema";
 
+// Configure for both serverless and traditional hosting
 neonConfig.webSocketConstructor = ws;
+neonConfig.pipelineConnect = false; // Better for traditional hosting
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
