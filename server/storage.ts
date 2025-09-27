@@ -4,9 +4,12 @@ import {
   type ExcelDataRow, 
   type InsertExcelData, 
   type SearchFilters,
-  type SearchResult 
-} from "@shared/schema";
-import { randomUUID } from "crypto";
+  type SearchResult,
+  excelFiles,
+  excelData
+} from "../shared/schema";
+import { db } from "./db";
+import { eq, ilike, and, sql } from "drizzle-orm";
 
 // Storage interface for Excel file operations
 export interface IStorage {
@@ -23,146 +26,139 @@ export interface IStorage {
   getFileRowCount(fileId: string): Promise<number>;
 }
 
-export class MemStorage implements IStorage {
-  private excelFiles: Map<string, ExcelFile>;
-  private excelData: Map<string, ExcelDataRow>;
-
-  constructor() {
-    this.excelFiles = new Map();
-    this.excelData = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
   async saveExcelFile(insertFile: InsertExcelFile): Promise<ExcelFile> {
-    const id = randomUUID();
-    const file: ExcelFile = {
-      ...insertFile,
-      id,
-      uploadDate: new Date(),
-      sheets: insertFile.sheets ? [...insertFile.sheets] : [],
-    };
-    this.excelFiles.set(id, file);
+    const [file] = await db
+      .insert(excelFiles)
+      .values(insertFile)
+      .returning();
     return file;
   }
 
   async getExcelFiles(): Promise<ExcelFile[]> {
-    return Array.from(this.excelFiles.values());
+    return await db.select().from(excelFiles);
   }
 
   async getExcelFile(id: string): Promise<ExcelFile | undefined> {
-    return this.excelFiles.get(id);
+    const [file] = await db.select().from(excelFiles).where(eq(excelFiles.id, id));
+    return file || undefined;
   }
 
   async deleteExcelFile(id: string): Promise<void> {
-    this.excelFiles.delete(id);
-    // Also delete associated data
-    const dataEntries = Array.from(this.excelData.entries());
-    for (const [dataId, data] of dataEntries) {
-      if (data.fileId === id) {
-        this.excelData.delete(dataId);
-      }
-    }
+    // Cascade deletion will handle associated data automatically
+    await db.delete(excelFiles).where(eq(excelFiles.id, id));
   }
 
   async saveExcelData(dataRows: InsertExcelData[]): Promise<void> {
-    for (const row of dataRows) {
-      const id = randomUUID();
-      const dataRow: ExcelDataRow = { 
-        ...row, 
-        id,
-        headers: [...row.headers],
-        rrNumber: row.rrNumber || null
-      };
-      this.excelData.set(id, dataRow);
+    if (dataRows.length > 0) {
+      // Insert in batches to handle large datasets efficiently
+      const batchSize = 1000;
+      for (let i = 0; i < dataRows.length; i += batchSize) {
+        const batch = dataRows.slice(i, i + batchSize);
+        await db.insert(excelData).values(batch);
+      }
     }
   }
 
   async searchByRRNumber(filters: SearchFilters): Promise<SearchResult[]> {
     const { rrNumber, sheet } = filters;
-    const exactMatches = new Map<string, SearchResult>();
-    const partialMatches = new Map<string, SearchResult>();
-
-    // Search through all data rows
-    const dataEntries = Array.from(this.excelData.values());
-    for (const data of dataEntries) {
-      // Filter by sheet if specified
-      if (sheet && data.sheetName !== sheet) continue;
-
-      // Check for exact match first
-      let isExactMatch = false;
-      let matchedRRNumber = '';
-      
-      if (data.rrNumber?.toLowerCase() === rrNumber.toLowerCase()) {
-        isExactMatch = true;
-        matchedRRNumber = data.rrNumber;
-      } else {
-        // Check for exact match in any field
-        for (const [key, value] of Object.entries(data.rowData)) {
-          if (value?.toString().toLowerCase() === rrNumber.toLowerCase()) {
-            isExactMatch = true;
-            matchedRRNumber = value.toString();
-            break;
-          }
-        }
-      }
-
-      // If not exact match, check for partial match
-      let isPartialMatch = false;
-      if (!isExactMatch) {
-        isPartialMatch = data.rrNumber?.toLowerCase().includes(rrNumber.toLowerCase()) ||
-                        Object.values(data.rowData).some(value => 
-                          value?.toString().toLowerCase().includes(rrNumber.toLowerCase())
-                        );
-      }
-
-      if (isExactMatch || isPartialMatch) {
-        const file = this.excelFiles.get(data.fileId);
-        if (!file) continue;
-
-        // Use different maps for exact vs partial matches
-        const resultsMap = isExactMatch ? exactMatches : partialMatches;
-        const matchType = isExactMatch ? 'exact' : 'partial';
-        
-        // Use fileId instead of fileName to avoid collisions
-        const key = `${file.id}-${data.sheetName}`;
-        
-        if (!resultsMap.has(key)) {
-          resultsMap.set(key, {
-            fileName: file.originalName,
-            sheetName: data.sheetName,
-            headers: data.headers,
-            rows: [],
-            matchingRows: [],
-            matchType: matchType as 'exact' | 'partial',
-            exactRRNumber: isExactMatch ? matchedRRNumber : undefined
-          });
-        }
-
-        const result = resultsMap.get(key)!;
-        result.rows.push(data.rowData);
-        result.matchingRows.push(result.rows.length - 1);
-      }
+    
+    // Build WHERE clause based on filters
+    let whereClause = sql`
+      (${excelData.rrNumber} ILIKE ${`%${rrNumber}%`} OR 
+       ${excelData.rowData}::text ILIKE ${`%${rrNumber}%`})
+    `;
+    
+    if (sheet) {
+      whereClause = and(whereClause, eq(excelData.sheetName, sheet)) ?? whereClause;
     }
 
-    // Return exact matches first, then partial matches
-    const exactResults = Array.from(exactMatches.values());
-    const partialResults = Array.from(partialMatches.values());
-    
-    return [...exactResults, ...partialResults];
+    // Get matching data with file information
+    const results = await db
+      .select({
+        data: excelData,
+        file: excelFiles
+      })
+      .from(excelData)
+      .innerJoin(excelFiles, eq(excelData.fileId, excelFiles.id))
+      .where(whereClause);
+
+    // Group results by file and sheet
+    const groupedResults = new Map<string, {
+      fileName: string;
+      sheetName: string;
+      headers: string[];
+      rows: Record<string, any>[];
+      matchingRows: number[];
+      exactMatches: boolean[];
+    }>();
+
+    for (const { data, file } of results) {
+      const key = `${file.id}-${data.sheetName}`;
+      
+      if (!groupedResults.has(key)) {
+        groupedResults.set(key, {
+          fileName: file.originalName,
+          sheetName: data.sheetName,
+          headers: data.headers,
+          rows: [],
+          matchingRows: [],
+          exactMatches: []
+        });
+      }
+
+      const group = groupedResults.get(key)!;
+      group.rows.push(data.rowData);
+      group.matchingRows.push(group.rows.length - 1);
+      
+      // Check if this is an exact match
+      const isExactMatch = data.rrNumber?.toLowerCase() === rrNumber.toLowerCase() ||
+        Object.values(data.rowData).some(value => 
+          value?.toString().toLowerCase() === rrNumber.toLowerCase()
+        );
+      group.exactMatches.push(isExactMatch);
+    }
+
+    // Convert to SearchResult format and sort by match type
+    const searchResults: SearchResult[] = Array.from(groupedResults.values()).map(group => {
+      const hasExactMatch = group.exactMatches.some(match => match);
+      const exactRRNumber = hasExactMatch ? 
+        results.find(r => r.data.rrNumber?.toLowerCase() === rrNumber.toLowerCase())?.data.rrNumber : 
+        undefined;
+      
+      return {
+        fileName: group.fileName,
+        sheetName: group.sheetName,
+        headers: group.headers,
+        rows: group.rows,
+        matchingRows: group.matchingRows,
+        matchType: hasExactMatch ? 'exact' as const : 'partial' as const,
+        exactRRNumber: exactRRNumber || undefined
+      };
+    });
+
+    // Sort exact matches first
+    return searchResults.sort((a, b) => {
+      if (a.matchType === 'exact' && b.matchType === 'partial') return -1;
+      if (a.matchType === 'partial' && b.matchType === 'exact') return 1;
+      return 0;
+    });
   }
 
   async getAvailableSheets(): Promise<string[]> {
-    const sheets = new Set<string>();
-    const dataEntries = Array.from(this.excelData.values());
-    for (const data of dataEntries) {
-      sheets.add(data.sheetName);
-    }
-    return Array.from(sheets);
+    const results = await db
+      .selectDistinct({ sheetName: excelData.sheetName })
+      .from(excelData);
+    return results.map(r => r.sheetName);
   }
 
   async getFileRowCount(fileId: string): Promise<number> {
-    const dataEntries = Array.from(this.excelData.values());
-    return dataEntries.filter(data => data.fileId === fileId).length;
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(excelData)
+      .where(eq(excelData.fileId, fileId));
+    return result.count;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
