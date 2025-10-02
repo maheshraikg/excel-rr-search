@@ -115,6 +115,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'No file uploaded' });
       }
       
+      // Check for duplicate file name
+      const existingFile = await storage.getExcelFileByName(file.originalname);
+      if (existingFile) {
+        return res.status(400).json({ 
+          error: 'Duplicate file',
+          message: `File "${file.originalname}" already exists. Please rename the file or delete the existing one first.`
+        });
+      }
+      
       console.log('Processing uploaded file:', file.originalname);
       
       const processedFile = await processExcelFile(
