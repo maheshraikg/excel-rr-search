@@ -73,7 +73,7 @@ export default function SearchInterface({
         <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2">
             <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-lg sm:text-xl">Search RR Numbers</span>
+            <span className="text-lg sm:text-xl">Search Excel Data</span>
           </div>
           {totalResults > 0 && (
             <Badge variant="secondary" data-testid="text-results-count" className="text-xs sm:text-sm w-fit">
@@ -87,13 +87,16 @@ export default function SearchInterface({
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1">
             <Input
-              placeholder="Enter RR Number (e.g., RR001234)"
+              placeholder="Search by RR Number, UHID, Name, Phone, Village, etc."
               value={filters.rrNumber}
               onChange={(e) => setFilters(prev => ({ ...prev, rrNumber: e.target.value }))}
               onKeyPress={handleKeyPress}
               data-testid="input-rr-number"
               className="text-sm sm:text-base"
             />
+            <p className="text-xs text-muted-foreground mt-1 ml-1">
+              Tip: Search any field from your Excel file
+            </p>
           </div>
           <Button 
             onClick={handleSearch}

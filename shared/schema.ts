@@ -38,7 +38,7 @@ export const insertDataSchema = createInsertSchema(excelData).omit({
 
 // Search filter schema
 export const searchSchema = z.object({
-  rrNumber: z.string().min(1, "RR number is required"),
+  rrNumber: z.string().min(1, "Search term is required"),
   sheet: z.string().optional(),
   dateRange: z.string().optional(),
 });

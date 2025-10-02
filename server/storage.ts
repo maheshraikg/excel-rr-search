@@ -17,6 +17,7 @@ export interface IStorage {
   saveExcelFile(file: InsertExcelFile): Promise<ExcelFile>;
   getExcelFiles(): Promise<ExcelFile[]>;
   getExcelFile(id: string): Promise<ExcelFile | undefined>;
+  getExcelFileByName(fileName: string): Promise<ExcelFile | undefined>;
   deleteExcelFile(id: string): Promise<void>;
   
   // Data operations
@@ -41,6 +42,11 @@ export class DatabaseStorage implements IStorage {
 
   async getExcelFile(id: string): Promise<ExcelFile | undefined> {
     const [file] = await db.select().from(excelFiles).where(eq(excelFiles.id, id));
+    return file || undefined;
+  }
+
+  async getExcelFileByName(fileName: string): Promise<ExcelFile | undefined> {
+    const [file] = await db.select().from(excelFiles).where(eq(excelFiles.originalName, fileName));
     return file || undefined;
   }
 

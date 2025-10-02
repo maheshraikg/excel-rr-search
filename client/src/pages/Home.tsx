@@ -8,7 +8,6 @@ import Footer from '@/components/Footer';
 import SocialShare from '@/components/SocialShare';
 import AppDownload from '@/components/AppDownload';
 import SocialMediaSharing from '@/components/SocialMediaSharing';
-import { AdBanner, AdRectangle } from '@/components/AdUnit';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { api, type SearchFilters, type SearchResult } from '@/lib/api';
@@ -121,13 +120,13 @@ export default function Home() {
             <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
               <SocialShare className="hidden lg:flex" />
               <Button
-                variant={showFileManagement ? "default" : "outline"}
+                variant={showFileManagement ? "default" : "default"}
                 onClick={() => setShowFileManagement(!showFileManagement)}
                 data-testid="button-toggle-file-management"
-                className="text-xs sm:text-sm"
+                className={`text-xs sm:text-sm font-bold shadow-lg ${!showFileManagement ? 'animate-pulse bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90' : ''}`}
               >
                 <Upload className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">{showFileManagement ? 'File Management' : 'Manage Files'}</span>
+                <span className="hidden sm:inline">{showFileManagement ? 'Back to Search' : 'Upload Files'}</span>
               </Button>
               <ThemeToggle />
             </div>
@@ -205,17 +204,11 @@ export default function Home() {
                     searchResults={searchResults}
                     searchTerm={currentSearchTerm}
                   />
-                  
-                  {/* Strategic Ad Placement - After Results (most clickable spot) */}
-                  <AdBanner className="my-8" />
                 </div>
               )}
 
               {/* App Download Section - Always visible */}
               <AppDownload />
-
-              {/* Strategic Ad Placement - Between sections when content is viewed */}
-              {hasSearched && <AdRectangle className="my-8" />}
 
               {/* Social Media Sharing Section - Show after search */}
               {hasSearched && <SocialMediaSharing />}

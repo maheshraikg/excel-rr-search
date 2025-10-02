@@ -1,14 +1,11 @@
 import { Heart, MessageCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AdBanner } from '@/components/AdUnit';
 
 export default function Footer() {
   return (
     <footer className="mt-8 sm:mt-16 border-t bg-muted/30">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Ad placement before footer content */}
-        <AdBanner className="mb-6" />
         {/* Contact Section */}
         <Card className="mb-6 sm:mb-8 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950 dark:to-red-950 border-orange-200 dark:border-orange-800">
           <CardContent className="p-4 sm:p-6">
