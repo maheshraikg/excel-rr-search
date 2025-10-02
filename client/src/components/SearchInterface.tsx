@@ -68,12 +68,12 @@ export default function SearchInterface({
   };
 
   return (
-    <Card>
-      <CardHeader className="p-4 sm:p-6">
+    <Card className="border-2 border-primary/30 shadow-lg bg-gradient-to-br from-primary/5 to-transparent">
+      <CardHeader className="p-4 sm:p-6 border-b-2 border-primary/20 bg-gradient-to-r from-primary/10 to-transparent">
         <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-lg sm:text-xl">Search Excel Data</span>
+            <Search className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Search Excel Data</span>
           </div>
           {totalResults > 0 && (
             <Badge variant="secondary" data-testid="text-results-count" className="text-xs sm:text-sm w-fit">
@@ -102,7 +102,7 @@ export default function SearchInterface({
             onClick={handleSearch}
             disabled={isSearching || !filters.rrNumber.trim()}
             data-testid="button-search"
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto btn-blink"
           >
             {isSearching ? (
               <>
@@ -157,7 +157,7 @@ export default function SearchInterface({
             variant="outline" 
             onClick={handleReset}
             data-testid="button-reset"
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto btn-blink"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
             <span className="text-sm sm:text-base">Reset</span>
