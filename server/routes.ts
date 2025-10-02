@@ -102,9 +102,40 @@ async function processExcelFile(fileBuffer: Buffer, fileName: string, originalNa
   return savedFile;
 }
 
+// Track data loading status
+let dataLoadingStatus = {
+  isLoading: true,
+  progress: 0,
+  message: 'Starting data load...',
+  filesLoaded: 0,
+  totalFiles: 0,
+  rowsLoaded: 0
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Load user's Excel data on startup
-  await loadUserData();
+  // Load user's Excel data in the BACKGROUND after server starts
+  // This makes the app available immediately
+  loadUserData()
+    .then(() => {
+      dataLoadingStatus = {
+        isLoading: false,
+        progress: 100,
+        message: 'All data loaded successfully!',
+        filesLoaded: dataLoadingStatus.totalFiles,
+        totalFiles: dataLoadingStatus.totalFiles,
+        rowsLoaded: dataLoadingStatus.rowsLoaded
+      };
+      console.log('Background data loading complete!');
+    })
+    .catch((error) => {
+      console.error('Error loading data:', error);
+      dataLoadingStatus.message = 'Error loading data: ' + error.message;
+    });
+  
+  // Add loading status endpoint
+  app.get('/api/loading-status', (req, res) => {
+    res.json(dataLoadingStatus);
+  });
   
   // Upload Excel files
   app.post('/api/upload', upload.single('excelFile'), async (req, res) => {

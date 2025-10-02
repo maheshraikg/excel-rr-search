@@ -18,9 +18,17 @@ function extractRRNumber(rowData: Record<string, any>): string | null {
 // Load the user's Excel files into the application
 export async function loadUserData() {
   const attachedDir = path.join(process.cwd(), 'attached_assets');
-  const files = fs.readdirSync(attachedDir);
   
-  console.log('Loading user data...');
+  // Check if directory exists
+  if (!fs.existsSync(attachedDir)) {
+    console.log('No attached_assets directory found - skipping data load');
+    return;
+  }
+  
+  const files = fs.readdirSync(attachedDir);
+  const excelFiles = files.filter(f => f.endsWith('.xlsx') || f.endsWith('.xls'));
+  
+  console.log(`Loading user data... (${excelFiles.length} files found)`);
   
   for (const fileName of files) {
     if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) continue;
