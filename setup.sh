@@ -63,9 +63,13 @@ DATABASE_URL=file:./data/app.db
 EOF
 fi
 
-# Create data directory for Excel files
+# Create required directories
 mkdir -p $APP_DIR/user_data
+mkdir -p $APP_DIR/logs
+mkdir -p $APP_DIR/data
 chmod 755 $APP_DIR/user_data
+chmod 755 $APP_DIR/logs
+chmod 755 $APP_DIR/data
 
 # Set proper permissions
 echo "Step 10: Setting permissions..."
@@ -120,13 +124,21 @@ echo "Step 13: Restarting Nginx..."
 systemctl restart nginx
 systemctl enable nginx
 
-# Start the app with PM2
+# Start the app with PM2 as www-data user
 echo "Step 14: Starting application with PM2..."
 cd $APP_DIR
-pm2 delete excel-rr-search 2>/dev/null || true
-pm2 start ecosystem.config.js
-pm2 save
-pm2 startup systemd -u root --hp /root
+
+# Create home directory for www-data user
+mkdir -p /home/www-data
+chown www-data:www-data /home/www-data
+
+# Set up PM2 for www-data user
+sudo -u www-data -H sh -c "cd $APP_DIR && pm2 delete excel-rr-search 2>/dev/null || true"
+sudo -u www-data -H sh -c "cd $APP_DIR && pm2 start ecosystem.config.js"
+sudo -u www-data -H sh -c "cd $APP_DIR && pm2 save"
+
+# Create PM2 startup script for www-data
+env PATH=$PATH:/usr/bin pm2 startup systemd -u www-data --hp /home/www-data
 
 # Show firewall status
 echo ""
