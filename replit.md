@@ -8,6 +8,27 @@ This is a web application designed to search and analyze data from Excel files b
 
 Preferred communication style: Simple, everyday language.
 
+## Deployment Information
+
+### Render Deployment (Recommended for Non-Technical Users)
+- **Platform**: Render.com - managed Node.js hosting
+- **Cost**: $7/month (Starter plan)
+- **Deployment Method**: GitHub integration with automatic builds
+- **Configuration**: render.yaml file configured with build and start commands
+- **Benefits**: 
+  - No command line required
+  - Automatic deployments on git push
+  - Instant startup (2-3 seconds)
+  - Background data loading for 166K+ rows
+  - Built-in SSL and monitoring
+- **Guide**: See RENDER_DEPLOYMENT_GUIDE.txt for step-by-step instructions
+
+### Alternative: Hostinger VPS Deployment
+- **Platform**: Hostinger VPS ($6.99/month)
+- **Note**: Requires technical knowledge (terminal commands, server configuration)
+- **Configuration**: setup.sh script available for automated installation
+- **Not recommended for non-technical users**
+
 ## System Architecture
 
 ### Frontend Architecture
