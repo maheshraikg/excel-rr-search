@@ -1,0 +1,166 @@
+====================================================================
+  EXCEL RR SEARCH APP - SIMPLE SETUP GUIDE FOR HOSTINGER VPS
+====================================================================
+
+This guide will help you move your app to Hostinger VPS in just a few simple steps.
+No technical knowledge required!
+
+====================================================================
+STEP 1: DOWNLOAD YOUR APP FILES
+====================================================================
+
+1. In Replit, click the three dots menu (⋮) at the top
+2. Select "Download as zip"
+3. Save the file to your computer
+4. Unzip/extract the file to a folder
+
+====================================================================
+STEP 2: CONNECT TO YOUR HOSTINGER VPS
+====================================================================
+
+Option A - Using Hostinger's Browser Terminal (EASIEST):
+1. Log into your Hostinger account
+2. Go to VPS > Manage
+3. Click "Browser terminal" or "Open terminal"
+4. You'll see a black screen with text - this is your terminal
+
+Option B - Using an SSH Client:
+1. Download and install "PuTTY" (for Windows) or use Terminal (for Mac)
+2. Use the SSH details from Hostinger to connect
+   - Host: Your VPS IP address
+   - Username: root
+   - Password: Your VPS password
+
+====================================================================
+STEP 3: UPLOAD YOUR APP FILES
+====================================================================
+
+Option A - Using Hostinger File Manager (EASIEST):
+1. In Hostinger, go to VPS > File Manager
+2. Navigate to /root/
+3. Upload all your extracted files from Step 1
+4. Make sure you can see these files: setup.sh, package.json, server folder, client folder
+
+Option B - Using FileZilla:
+1. Download and install FileZilla
+2. Connect using your VPS details
+3. Upload all extracted files to /root/
+
+====================================================================
+STEP 4: RUN THE AUTOMATIC SETUP
+====================================================================
+
+In your terminal (from Step 2), type these commands exactly as shown:
+
+1. Go to the folder with your files:
+   cd /root
+
+2. Make the setup script executable:
+   chmod +x setup.sh
+
+3. Run the automatic setup:
+   sudo bash setup.sh
+
+The script will now automatically:
+- Install Node.js
+- Install all required software
+- Build your app
+- Configure the web server
+- Start your app
+
+This will take 3-5 minutes. Just wait until you see "Setup Complete!"
+
+====================================================================
+STEP 5: ACCESS YOUR APP
+====================================================================
+
+After setup completes, you'll see a message like:
+
+"Access it at: http://123.456.789.012"
+
+1. Copy that web address
+2. Paste it into your web browser
+3. Your Excel RR Search app should now be running!
+
+====================================================================
+STEP 6: (OPTIONAL) SETUP CUSTOM DOMAIN
+====================================================================
+
+If you want to use your own domain name (like www.yoursite.com):
+
+1. In Hostinger, go to Domains
+2. Point your domain to your VPS IP address
+3. In the terminal, type:
+   
+   sudo nano /etc/nginx/sites-available/excel-rr-search
+   
+4. Find the line that says: server_name _;
+5. Change it to: server_name www.yoursite.com yoursite.com;
+6. Press Ctrl+X, then Y, then Enter to save
+7. Restart Nginx:
+   
+   sudo systemctl restart nginx
+
+====================================================================
+USEFUL COMMANDS
+====================================================================
+
+If you need to manage your app, use these commands in the terminal:
+
+Check if app is running:
+   pm2 status
+
+View app activity logs:
+   pm2 logs excel-rr-search
+
+Restart the app:
+   pm2 restart excel-rr-search
+
+Stop the app:
+   pm2 stop excel-rr-search
+
+Start the app again:
+   pm2 start excel-rr-search
+
+====================================================================
+IMPORTANT NOTES
+====================================================================
+
+1. Your Excel files are stored in: /var/www/excel-rr-search/user_data
+2. The app uses minimal resources and should run smoothly on basic VPS
+3. Your app automatically starts when the server reboots
+4. For SSL/HTTPS (secure connection), you can use Hostinger's built-in SSL
+
+====================================================================
+TROUBLESHOOTING
+====================================================================
+
+Problem: "Setup Complete!" but website doesn't load
+Solution: Wait 1-2 minutes for the app to fully start, then try again
+
+Problem: Can't access the website
+Solution: Make sure port 80 is open in your Hostinger firewall settings
+
+Problem: App stopped working
+Solution: Type: pm2 restart excel-rr-search
+
+====================================================================
+NEED HELP?
+====================================================================
+
+If you run into any issues:
+1. Check the logs with: pm2 logs excel-rr-search
+2. Restart the app with: pm2 restart excel-rr-search
+3. Contact Hostinger support if the VPS itself has issues
+
+====================================================================
+YOUR APP IS READY!
+====================================================================
+
+Congratulations! Your Excel RR Search app is now running on your own server.
+You can access it anytime using your VPS IP address or custom domain.
+
+Cost savings: Instead of paying Replit monthly, you now have full control
+with a one-time Hostinger VPS payment of around $6.99/month!
+
+====================================================================
