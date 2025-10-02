@@ -1,0 +1,160 @@
+═══════════════════════════════════════════════════════════════════════════
+  SIMPLE GUIDE: Move Your App from Replit to Render
+═══════════════════════════════════════════════════════════════════════════
+
+WHY RENDER?
+-----------
+✓ Same price as Hostinger VPS ($7/month)
+✓ Much SIMPLER - no command line needed!
+✓ Your app will load FAST
+✓ No technical knowledge required
+
+
+═══════════════════════════════════════════════════════════════════════════
+STEP 1: EXPORT YOUR APP FROM REPLIT TO GITHUB
+═══════════════════════════════════════════════════════════════════════════
+
+1. In your Replit project, look at the LEFT SIDEBAR
+   
+2. Click the "Version Control" icon (looks like a branching tree)
+
+3. You'll see a button that says "Create a Git Repo" or "Connect to GitHub"
+   - If it says "Create a Git Repo": Click it
+   - If it says "Connect to GitHub": Click it
+
+4. Follow the prompts to:
+   - Sign in to GitHub (create free account if needed)
+   - Give your repository a name: "excel-rr-search"
+   - Click "Create Repository"
+
+5. Wait for Replit to push all your files to GitHub (takes 1-2 minutes)
+
+DONE! Your app is now on GitHub.
+
+
+═══════════════════════════════════════════════════════════════════════════
+STEP 2: DEPLOY TO RENDER (5 MINUTES)
+═══════════════════════════════════════════════════════════════════════════
+
+A. CREATE RENDER ACCOUNT
+   1. Go to: https://render.com
+   2. Click "Get Started"
+   3. Sign up using your SAME GitHub account (from Step 1)
+   4. This will connect Render to your GitHub automatically
+
+
+B. DEPLOY YOUR APP
+   1. Once logged in, click the big "+ New" button (top right)
+   
+   2. Select "Web Service" from the dropdown
+   
+   3. You'll see a list of your GitHub repositories
+      - Find "excel-rr-search" (the one you just created)
+      - Click "Connect" next to it
+   
+   4. Fill in the settings:
+      ┌─────────────────────────────────────────────────────┐
+      │ Name:           excel-rr-search                     │
+      │ Region:         Oregon (US West)                    │
+      │ Branch:         main                                 │
+      │ Build Command:  npm install && npm run build        │
+      │ Start Command:  npm run start                       │
+      └─────────────────────────────────────────────────────┘
+   
+   5. Scroll down to "Instance Type"
+      - Select: "Starter ($7/month)"
+   
+   6. Click the big blue "Create Web Service" button at the bottom
+
+
+C. WAIT FOR DEPLOYMENT (5-10 MINUTES)
+   - You'll see a black screen with green text (logs)
+   - This shows your app being installed
+   - Wait until you see: "✓ Build successful"
+   - Then wait until you see: "serving on port XXXX"
+   
+   DONE! Your app is now live!
+
+
+D. GET YOUR APP URL
+   - At the top of the page, you'll see a URL like:
+     "excel-rr-search.onrender.com"
+   - Click it to open your app!
+   - This is your permanent URL - share it with anyone!
+
+
+═══════════════════════════════════════════════════════════════════════════
+WHAT HAPPENS NEXT?
+═══════════════════════════════════════════════════════════════════════════
+
+✓ Your app is now running on Render
+✓ It will load FAST (2-3 seconds)
+✓ Your Excel files are included automatically
+✓ The app costs $7/month (same as VPS but much simpler!)
+✓ Render keeps your app running 24/7
+✓ If it crashes, Render restarts it automatically
+
+
+═══════════════════════════════════════════════════════════════════════════
+FUTURE UPDATES
+═══════════════════════════════════════════════════════════════════════════
+
+When you want to update your app:
+
+1. Make changes in Replit (as usual)
+
+2. In Replit's Version Control panel:
+   - Type a message like "Updated search feature"
+   - Click "Commit & Push"
+
+3. Render will AUTOMATICALLY:
+   - Detect the changes
+   - Rebuild your app
+   - Deploy the new version
+   
+No extra steps needed!
+
+
+═══════════════════════════════════════════════════════════════════════════
+COST BREAKDOWN
+═══════════════════════════════════════════════════════════════════════════
+
+Render Starter Plan: $7/month
+
+What you get:
+✓ Always-on app (never sleeps)
+✓ Fast loading
+✓ Automatic updates
+✓ Automatic restarts if crashes
+✓ Free SSL certificate (https://)
+✓ No command line needed!
+
+
+═══════════════════════════════════════════════════════════════════════════
+TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════
+
+Problem: "Build failed" error
+Solution: Check the logs (black screen). Look for red error messages.
+          Contact me if you see errors - I can help!
+
+Problem: App is slow to load first time
+Solution: Normal! First load takes 30 seconds as data loads.
+          After that, it's instant!
+
+Problem: Can't find repository in Render
+Solution: Make sure you signed into Render with the SAME GitHub
+          account you used to create the repository in Step 1.
+
+
+═══════════════════════════════════════════════════════════════════════════
+NEED HELP?
+═══════════════════════════════════════════════════════════════════════════
+
+If you get stuck at any step, just:
+1. Take a screenshot of what you see
+2. Tell me which step you're on
+3. I'll guide you through it!
+
+
+═══════════════════════════════════════════════════════════════════════════
