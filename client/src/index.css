@@ -406,6 +406,28 @@
   }
 }
 
+@keyframes button-blink {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes whatsapp-strong-blink {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(37, 211, 102, 0.8), 0 0 60px rgba(37, 211, 102, 0.5);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(37, 211, 102, 1), 0 0 100px rgba(37, 211, 102, 0.7);
+    opacity: 0.95;
+  }
+}
+
 .btn-glow-pulse {
   animation: pulse-glow 2s ease-in-out infinite;
 }
@@ -424,4 +446,12 @@
 
 .whatsapp-pulse-ring {
   animation: whatsapp-pulse 2s ease-in-out infinite;
+}
+
+.btn-blink {
+  animation: button-blink 1.5s ease-in-out infinite;
+}
+
+.whatsapp-strong-blink {
+  animation: whatsapp-strong-blink 1.2s ease-in-out infinite;
 }

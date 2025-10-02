@@ -8,8 +8,8 @@ import Footer from '@/components/Footer';
 import SocialShare from '@/components/SocialShare';
 import AppDownload from '@/components/AppDownload';
 import SocialMediaSharing from '@/components/SocialMediaSharing';
-import WhatsAppChannelButton from '@/components/WhatsAppChannelButton';
 import WebAppDownloadSection from '@/components/WebAppDownloadSection';
+import LargeWhatsAppButton from '@/components/LargeWhatsAppButton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { api, type SearchFilters, type SearchResult } from '@/lib/api';
@@ -121,12 +121,11 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
               <SocialShare className="hidden lg:flex" />
-              <WhatsAppChannelButton />
               <Button
                 variant={showFileManagement ? "default" : "default"}
                 onClick={() => setShowFileManagement(!showFileManagement)}
                 data-testid="button-toggle-file-management"
-                className={`text-xs sm:text-sm font-bold shadow-lg ${!showFileManagement ? 'animate-pulse bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90' : ''}`}
+                className={`text-xs sm:text-sm font-bold shadow-lg btn-blink ${!showFileManagement ? 'animate-pulse bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90' : ''}`}
               >
                 <Upload className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">{showFileManagement ? 'Back to Search' : 'Upload Files'}</span>
@@ -212,6 +211,9 @@ export default function Home() {
 
               {/* Web App Download Section */}
               <WebAppDownloadSection />
+
+              {/* Large WhatsApp Channel Button */}
+              <LargeWhatsAppButton />
 
               {/* App Download Section - Always visible */}
               <AppDownload />
