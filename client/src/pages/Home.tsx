@@ -8,6 +8,8 @@ import Footer from '@/components/Footer';
 import SocialShare from '@/components/SocialShare';
 import AppDownload from '@/components/AppDownload';
 import SocialMediaSharing from '@/components/SocialMediaSharing';
+import WhatsAppChannelButton from '@/components/WhatsAppChannelButton';
+import WebAppDownloadSection from '@/components/WebAppDownloadSection';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { api, type SearchFilters, type SearchResult } from '@/lib/api';
@@ -119,6 +121,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
               <SocialShare className="hidden lg:flex" />
+              <WhatsAppChannelButton />
               <Button
                 variant={showFileManagement ? "default" : "default"}
                 onClick={() => setShowFileManagement(!showFileManagement)}
@@ -206,6 +209,9 @@ export default function Home() {
                   />
                 </div>
               )}
+
+              {/* Web App Download Section */}
+              <WebAppDownloadSection />
 
               {/* App Download Section - Always visible */}
               <AppDownload />
